@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ta">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Marathon Race Desk</title>
+<meta name="theme-color" content="#061A24">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Catamaran:wght@600;700;800;900&family=Mukta+Malar:wght@400;500;700&family=JetBrains+Mono:wght@700&display=swap">
+<style>
+/* Layout: race-day desk. One dark operator screen: tab bar at the bottom for thumbs, scanner first, result card large enough to read at arm's length. */
+:root{
+  color-scheme:dark;
+  --night:#061A24; --night-2:#0B2A36; --night-3:#123848;
+  --dawn:#FF5A1F; --sun:#FFC23D; --river:#22B5C4;
+  --ok:#2EC27E; --warn:#FFB020; --bad:#FF5A5A;
+  --fg:#EAF3F2; --mist:#A8C2C8; --line:rgba(255,255,255,.1);
+  --f-race:"Big Shoulders Display","Catamaran",Impact,sans-serif;
+  --f-ta:"Catamaran","Mukta Malar","Noto Sans Tamil",system-ui,sans-serif;
+  --f-body:"Mukta Malar","Catamaran","Noto Sans Tamil",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px}
+h1,h2,h3{margin:0;line-height:1.15}
+p{margin:0}
+.kicker{font-family:var(--f-race);font-weight:800;letter-spacing:.16em;font-size:.8rem;text-transform:uppercase;color:var(--dawn)}
+.tnum{font-variant-numeric:tabular-nums}
+.btn{appearance:none;border:0;cursor:pointer;font-family:var(--f-ta);font-weight:800;font-size:1rem;padding:13px 18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#fff;background:var(--night-3);text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn-go{background:var(--dawn)}
+.btn-ok{background:var(--ok);color:#04210F}
+.btn-line{background:transparent;box-shadow:inset 0 0 0 2px var(--line)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+input{font:inherit;color:var(--fg);background:var(--night-2);border:0;border-bottom:2px solid var(--line);padding:12px;width:100%;border-radius:0}
+input:focus{outline:none;border-bottom-color:var(--dawn)}
+.err{color:var(--bad);min-height:1.3em;font-size:.9rem}
+
+/* login */
+.login{min-height:100%;display:grid;place-items:center;padding:24px 16px}
+.login form{width:100%;max-width:360px;display:grid;gap:14px}
+.login h1{font-family:var(--f-race);font-weight:900;font-size:3rem;text-transform:uppercase;line-height:.9}
+.login h1 em{font-style:normal;color:var(--dawn)}
+.pin{font-family:var(--f-mono);font-size:1.6rem;letter-spacing:.4em;text-align:center}
+
+/* app */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(6,26,36,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:10px}
+.top b{font-family:var(--f-race);font-weight:900;font-size:1.25rem;letter-spacing:.06em;text-transform:uppercase}
+.top small{color:var(--mist);font-size:.75rem;display:block;line-height:1}
+.demo{font-size:.75rem;background:var(--sun);color:#1a1200;padding:2px 8px;border-radius:3px;font-weight:700}
+main{padding-block:16px calc(96px + env(safe-area-inset-bottom,0px))}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--night-2);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{appearance:none;background:none;border:0;color:var(--mist);font-family:var(--f-ta);font-weight:800;font-size:.9rem;padding:12px 4px 10px;display:grid;justify-items:center;gap:2px;cursor:pointer;border-top:3px solid transparent}
+.tabs button[aria-selected="true"]{color:#fff;border-top-color:var(--dawn)}
+.tabs svg{width:24px;height:24px}
+
+/* scan */
+.cam{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:1/1;max-width:100%;display:grid;place-items:center}
+#reader{width:100%}
+#reader video{object-fit:cover}
+.cam .idle{color:var(--mist);text-align:center;padding:20px;display:grid;gap:12px;justify-items:center}
+.manual{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}
+.hint{color:var(--mist);font-size:.85rem}
+
+.result{margin-top:16px;border-radius:6px;overflow:hidden;background:var(--night-2);border:1px solid var(--line)}
+.banner{padding:10px 14px;font-family:var(--f-ta);font-weight:800;display:flex;gap:8px;align-items:center}
+.banner.ok{background:var(--ok);color:#04210F}
+.banner.warn{background:var(--warn);color:#2A1A00}
+.banner.bad{background:var(--bad);color:#2A0000}
+.r-body{padding:14px;display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:start}
+.r-bib{font-family:var(--f-race);font-weight:900;font-size:4.2rem;line-height:.85}
+.r-name{font-family:var(--f-ta);font-weight:800;font-size:1.3rem;grid-column:1/-1;overflow-wrap:anywhere}
+.r-meta{grid-column:1/-1;color:var(--mist);font-size:.92rem}
+.size{background:var(--fg);color:var(--night);text-align:center;padding:6px 12px;border-radius:4px;min-width:84px}
+.size small{display:block;font-family:var(--f-ta);font-weight:800;font-size:.7rem;letter-spacing:.06em}
+.size b{font-family:var(--f-race);font-weight:900;font-size:2.4rem;line-height:1}
+.chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--night-3);color:var(--mist)}
+.chip.on{background:rgba(46,194,126,.18);color:var(--ok)}
+.r-act{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.r-act .btn{padding:16px 10px}
+.pick{display:grid;gap:8px;padding:14px}
+.pick button{text-align:left;justify-content:flex-start}
+
+/* summary */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--night-2);border:1px solid var(--line);padding:14px;border-radius:6px;min-width:0}
+.tile b{display:block;font-family:var(--f-race);font-weight:900;font-size:2.6rem;line-height:1}
+.tile span{color:var(--mist);font-family:var(--f-ta);font-weight:700;font-size:.85rem}
+.tile.hero{grid-column:1/-1;background:linear-gradient(120deg,var(--night-3),var(--night-2))}
+.tile.hero b{color:var(--sun);font-size:3.2rem}
+.sec{margin-top:22px;display:grid;gap:10px}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:110px 1fr 42px;gap:10px;align-items:center;font-size:.92rem}
+.bar .t{height:14px;background:var(--night-3);border-radius:2px;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--c,var(--river))}
+.bar b{font-family:var(--f-mono);text-align:right}
+.sizes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sizes div{background:var(--night-2);border:1px solid var(--line);border-radius:4px;text-align:center;padding:8px 2px}
+.sizes small{display:block;color:var(--mist);font-weight:700;font-size:.78rem}
+.sizes b{font-family:var(--f-race);font-weight:900;font-size:1.6rem}
+
+/* list */
+.tools{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.filters button{appearance:none;border:1px solid var(--line);background:none;color:var(--mist);font:inherit;font-weight:700;font-size:.82rem;padding:5px 12px;border-radius:999px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--night);border-color:var(--fg)}
+.rows{margin-top:12px;display:grid;gap:6px}
+.row{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;background:var(--night-2);border:1px solid var(--line);border-left:4px solid var(--c,var(--river));padding:10px 12px;border-radius:4px;cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
+.row .bn{font-family:var(--f-race);font-weight:900;font-size:1.5rem}
+.row .nm{font-family:var(--f-ta);font-weight:800;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+.row .nm small{display:block;font-family:var(--f-body);font-weight:500;color:var(--mist);font-size:.8rem}
+.row .st{display:flex;gap:4px;font-size:1.1rem}
+.row .st span{opacity:.25}.row .st span.on{opacity:1}
+.empty{color:var(--mist);text-align:center;padding:30px 10px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--night);padding:10px 16px;border-radius:4px;font-weight:700;z-index:40;max-width:calc(100% - 32px)}
+</style>
+
+<section class="login" id="login">
+  <form id="loginForm" novalidate>
+    <p class="kicker">Race desk • Admin</p>
+    <h1>Natura's<br><em>Marathon</em></h1>
+    <p class="hint">ஒருங்கிணைப்பாளர்கள் மட்டும். அட்மின் PIN-ஐ உள்ளிடவும்.</p>
+    <input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••••" aria-label="அட்மின் PIN">
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn btn-go" type="submit" id="loginBtn">உள்ளே செல் →</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap">
+      <div><b>Race Desk</b><small>25.10.2026 • முக்கூடல்</small></div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="demo" id="demoTag" hidden>DEMO</span><button class="btn btn-line" style="padding:8px 12px;font-size:.85rem" id="logout" type="button">வெளியேறு</button></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- SCAN -->
+    <section id="tab-scan" aria-label="ஸ்கேன்">
+      <div class="cam">
+        <div id="reader"></div>
+        <div class="idle" id="camIdle">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+          <p>என்ட்ரி கார்டில் உள்ள QR கோடை ஸ்கேன் செய்யுங்கள்</p>
+          <button class="btn btn-go" type="button" id="camStart">கேமராவை திற</button>
+        </div>
+      </div>
+      <form class="manual" id="manualForm">
+        <input id="q" placeholder="NT26-0001 / BIB 1001 / மொபைல்" aria-label="பதிவு எண், BIB அல்லது மொபைல் நம்பர்" autocomplete="off">
+        <button class="btn" type="submit">தேடு</button>
+      </form>
+      <p class="err" id="scanErr" role="alert"></p>
+      <div id="result"></div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="tab-sum" aria-label="சுருக்கம்" hidden>
+      <div class="tiles">
+        <div class="tile hero"><b class="tnum" id="s-amt">₹0</b><span>வசூலான மொத்த தொகை</span></div>
+        <div class="tile"><b class="tnum" id="s-total">0</b><span>பணம் செலுத்திய பதிவுகள்</span></div>
+        <div class="tile"><b class="tnum" id="s-pending">0</b><span>பணம் நிலுவையில் (pending)</span></div>
+        <div class="tile"><b class="tnum" id="s-in">0</b><span>செக்-இன் ஆனவர்கள்</span></div>
+        <div class="tile"><b class="tnum" id="s-tee">0</b><span>டீசர்ட் வழங்கப்பட்டது</span></div>
+      </div>
+      <div class="sec">
+        <p class="kicker">By category</p>
+        <div class="bars" id="s-cats"></div>
+      </div>
+      <div class="sec">
+        <p class="kicker">T-shirt order</p>
+        <div class="sizes" id="s-sizes"></div>
+        <p class="hint">டீசர்ட் ஆர்டர் செய்ய இந்த எண்ணிக்கையைப் பயன்படுத்தலாம்.</p>
+      </div>
+      <div class="sec">
+        <button class="btn btn-line" type="button" id="refresh">↻ புதுப்பி</button>
+      </div>
+    </section>
+
+    <!-- LIST -->
+    <section id="tab-list" aria-label="பட்டியல்" hidden>
+      <div class="tools">
+        <input id="search" placeholder="பெயர், BIB, மொபைல் தேடு" aria-label="பட்டியலில் தேடு" autocomplete="off">
+        <button class="btn" type="button" id="csv">CSV ⤓</button>
+      </div>
+      <div class="filters" id="filters">
+        <button type="button" data-f="all" aria-pressed="true">எல்லாம்</button>
+        <button type="button" data-f="M7" aria-pressed="false">7 KM</button>
+        <button type="button" data-f="M5" aria-pressed="false">5 KM</button>
+        <button type="button" data-f="KIDS" aria-pressed="false">Kids</button>
+        <button type="button" data-f="AZ" aria-pressed="false">ஆணழகன்</button>
+        <button type="button" data-f="notin" aria-pressed="false">வராதவர்கள்</button>
+      </div>
+      <p class="hint" id="count" style="margin-top:10px"></p>
+      <div class="rows" id="rows"></div>
+    </section>
+  </main>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3M7 12h10"/></svg>ஸ்கேன்</button>
+    <button role="tab" aria-selected="false" data-tab="sum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>சுருக்கம்</button>
+    <button role="tab" aria-selected="false" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>பட்டியல்</button>
+  </nav>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const CONFIG = {
+  SUPABASE_URL: "https://qswhqyreilvbrcrfjqhx.supabase.co",
+  ADMIN_FN: "admin-",   // Supabase-ல் உள்ள Function பெயர் (slug)
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd2hxeXJlaWx2YnJjcmZqcWh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MDEzOTcsImV4cCI6MjEwNjk3NzM5N30.Q6OR0lS52acaHhQsXBRBZ_RjAf9IXTc0nO5dK9GXkSk"
+};
+const DEMO = location.protocol === "file:" || /claude|anthropic|usercontent/i.test(location.hostname);
+const CATS = {
+  M7:{label:"7 KM மாரத்தான்", c:"#FF5A1F"}, M5:{label:"5 KM மாரத்தான்", c:"#22B5C4"},
+  KIDS:{label:"கிட்ஸ் மாரத்தான்", c:"#E0A100"}, AZ:{label:"ஆணழகன்", c:"#A66BE0"}
+};
+const SIZE_ORDER = ["26","28","30","32","34","S","M","L","XL","XXL"];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const t = iso => iso ? new Date(iso).toLocaleTimeString("ta-IN",{hour:"2-digit",minute:"2-digit"}) : "";
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>el.hidden=true,2200); }
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(_){} }
+
+/* ---- demo data (Claude ப்ரிவியூவுக்கு மட்டும்) ---- */
+const now = Date.now(), ago = m => new Date(now - m*6e4).toISOString();
+let demoRows = [
+  {reg_no:"NT26-0001",bib_no:"1001",name:"திருமலை",age:17,gender:"M",category:"M7",phone:"9876543210",tshirt:"M",city:"திருநெல்வேலி",fee:200,status:"paid",paid_at:ago(900),checked_in_at:null,tshirt_given_at:null},
+  {reg_no:"NT26-0002",bib_no:"1002",name:"பிரியா K",age:24,gender:"F",category:"M7",phone:"9842011223",tshirt:"S",city:"முக்கூடல்",fee:200,status:"paid",paid_at:ago(800),checked_in_at:ago(30),tshirt_given_at:ago(29)},
+  {reg_no:"NT26-0003",bib_no:"2001",name:"அருண் M",age:12,gender:"M",category:"M5",phone:"9790011122",tshirt:"32",city:"களியன்குளம்",fee:200,status:"paid",paid_at:ago(700),checked_in_at:ago(12),tshirt_given_at:null},
+  {reg_no:"NT26-0004",bib_no:"3001",name:"தியா",age:5,gender:"F",category:"KIDS",phone:"9443322110",tshirt:"26",city:"அம்பாசமுத்திரம்",fee:200,status:"paid",paid_at:ago(600),checked_in_at:null,tshirt_given_at:null},
+  {reg_no:"NT26-0005",bib_no:"4001",name:"கார்த்திக் R",age:17,gender:"M",category:"AZ",phone:"9361234567",tshirt:"L",city:"சேரன்மகாதேவி",fee:300,status:"paid",paid_at:ago(500),checked_in_at:null,tshirt_given_at:null},
+  {reg_no:"NT26-0006",bib_no:"1003",name:"செல்வம் P",age:41,gender:"M",category:"M7",phone:"9500012345",tshirt:"XL",city:"பாபநாசம்",fee:200,status:"paid",paid_at:ago(400),checked_in_at:null,tshirt_given_at:null}
+];
+async function demoApi(b){
+  await new Promise(r=>setTimeout(r,250));
+  if(b.pin !== "1234") throw new Error("PIN தவறு. (டெமோ PIN: 1234)");
+  if(b.action==="login") return {ok:true};
+  if(b.action==="list") return {rows:demoRows, pending:2};
+  if(b.action==="find"){
+    let q=String(b.q).trim().toUpperCase(); if(q.startsWith("NT:")) q=q.slice(3);
+    return {rows:demoRows.filter(r=>r.reg_no===q||r.bib_no===q||r.phone===q)};
+  }
+  const r = demoRows.find(x=>x.reg_no===b.reg_no); if(!r) throw new Error("பதிவு இல்லை.");
+  const col = b.action==="checkin"?"checked_in_at":"tshirt_given_at";
+  if(r[col]) return {row:{...r}, already:r[col]};
+  r[col]=new Date().toISOString(); if(col==="tshirt_given_at"&&!r.checked_in_at) r.checked_in_at=r[col];
+  return {row:{...r}, already:null};
+}
+
+/* ---- api ---- */
+let PIN = "";
+try{ PIN = sessionStorage.getItem("nt26_pin") || ""; }catch(_){}
+async function api(body){
+  body = {...body, pin:PIN};
+  if(DEMO) return demoApi(body);
+  let r;
+  try{
+    r = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/${CONFIG.ADMIN_FN}`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":CONFIG.SUPABASE_ANON_KEY,"Authorization":`Bearer ${CONFIG.SUPABASE_ANON_KEY}`},
+      body:JSON.stringify(body)
+    });
+  }catch(_){
+    throw new Error(navigator.onLine === false ? "இணைய இணைப்பு இல்லை." : "சர்வரை அடைய முடியவில்லை. Supabase-ல் 'admin' Function டெப்ளாய் ஆகியுள்ளதா என்று பார்க்கவும்.");
+  }
+  const j = await r.json().catch(()=>({}));
+  if(r.status===401){ logout(); throw new Error(j.error||"PIN தவறு."); }
+  if(!r.ok) throw new Error(j.error||"சர்வர் பிழை.");
+  return j;
+}
+
+/* ---- login ---- */
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  PIN = $("#pin").value.trim(); $("#loginErr").textContent=""; $("#loginBtn").disabled=true;
+  try{ await api({action:"login"}); try{sessionStorage.setItem("nt26_pin",PIN);}catch(_){} enter(); }
+  catch(err){ $("#loginErr").textContent=err.message; }
+  finally{ $("#loginBtn").disabled=false; }
+});
+function enter(){ $("#login").hidden=true; $("#app").hidden=false; $("#demoTag").hidden=!DEMO; loadList(); }
+function logout(){ PIN=""; try{sessionStorage.removeItem("nt26_pin");}catch(_){} stopCam(); $("#app").hidden=true; $("#login").hidden=false; $("#pin").value=""; }
+$("#logout").addEventListener("click", logout);
+if(DEMO){ $("#pin").value="1234"; $("#loginErr").textContent="டெமோ மோடு: PIN 1234"; }
+
+/* ---- tabs ---- */
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+  ["scan","sum","list"].forEach(k=>$("#tab-"+k).hidden = k!==b.dataset.tab);
+  if(b.dataset.tab!=="scan") { stopCam(); loadList(); }
+}));
+
+/* ---- data ---- */
+let ROWS = [], PENDING = 0;
+async function loadList(){
+  try{ const j = await api({action:"list"}); ROWS=j.rows||[]; PENDING=j.pending||0; renderSummary(); renderList(); }
+  catch(e){ toast(e.message); }
+}
+$("#refresh").addEventListener("click", loadList);
+
+function renderSummary(){
+  $("#s-amt").textContent = "₹" + ROWS.reduce((a,r)=>a+(r.fee||0),0).toLocaleString("en-IN");
+  $("#s-total").textContent = ROWS.length;
+  $("#s-pending").textContent = PENDING;
+  $("#s-in").textContent = ROWS.filter(r=>r.checked_in_at).length;
+  $("#s-tee").textContent = ROWS.filter(r=>r.tshirt_given_at).length;
+  const max = Math.max(1, ...Object.keys(CATS).map(k=>ROWS.filter(r=>r.category===k).length));
+  $("#s-cats").innerHTML = Object.entries(CATS).map(([k,c])=>{
+    const n = ROWS.filter(r=>r.category===k).length;
+    return `<div class="bar" style="--c:${c.c}"><span>${c.label}</span><div class="t"><i style="width:${n/max*100}%"></i></div><b>${n}</b></div>`;
+  }).join("");
+  $("#s-sizes").innerHTML = SIZE_ORDER.map(s=>`<div><small>${s}</small><b class="tnum">${ROWS.filter(r=>r.tshirt===s).length}</b></div>`).join("");
+}
+
+let FILTER="all";
+document.querySelectorAll("#filters button").forEach(b=>b.addEventListener("click",()=>{
+  FILTER=b.dataset.f; document.querySelectorAll("#filters button").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderList();
+}));
+$("#search").addEventListener("input", renderList);
+function filtered(){
+  const q = $("#search").value.trim().toLowerCase();
+  return ROWS.filter(r=>{
+    if(FILTER==="notin" && r.checked_in_at) return false;
+    if(CATS[FILTER] && r.category!==FILTER) return false;
+    return !q || [r.name,r.bib_no,r.phone,r.reg_no,r.city].some(v=>String(v||"").toLowerCase().includes(q));
+  });
+}
+function renderList(){
+  const list = filtered();
+  $("#count").textContent = `${list.length} / ${ROWS.length} பதிவுகள்`;
+  $("#rows").innerHTML = list.length ? list.map(r=>`
+    <button class="row" type="button" data-reg="${esc(r.reg_no)}" style="--c:${CATS[r.category]?.c}">
+      <span class="bn">${esc(r.bib_no)}</span>
+      <span class="nm">${esc(r.name)}<small>${CATS[r.category]?.label} • ${esc(r.tshirt)} • ${esc(r.phone)}</small></span>
+      <span class="st" aria-label="${r.checked_in_at?"செக்-இன் ஆனது":"செக்-இன் இல்லை"}, ${r.tshirt_given_at?"டீசர்ட் கொடுத்தாச்சு":"டீசர்ட் இல்லை"}"><span class="${r.checked_in_at?"on":""}">✅</span><span class="${r.tshirt_given_at?"on":""}">🎽</span></span>
+    </button>`).join("") : `<p class="empty">இன்னும் பதிவுகள் இல்லை.</p>`;
+}
+$("#rows").addEventListener("click", e=>{
+  const b = e.target.closest("[data-reg]"); if(!b) return;
+  document.querySelector('[data-tab="scan"]').click();
+  lookup(b.dataset.reg);
+});
+
+$("#csv").addEventListener("click", ()=>{
+  const cols = ["reg_no","bib_no","name","age","gender","category","phone","tshirt","city","fee","paid_at","checked_in_at","tshirt_given_at"];
+  const csv = "﻿" + [cols.join(","), ...ROWS.map(r=>cols.map(c=>`"${String(r[c]??"").replace(/"/g,'""')}"`).join(","))].join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download = `natura-marathon-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("CSV தயார்");
+});
+
+/* ---- lookup + result ---- */
+async function lookup(q){
+  $("#scanErr").textContent = "";
+  try{
+    const j = await api({action:"find", q});
+    const rows = j.rows||[];
+    if(!rows.length){ buzz([80,60,80]); $("#result").innerHTML = `<div class="result"><div class="banner bad">✕ பதிவு கிடைக்கவில்லை / பணம் செலுத்தப்படவில்லை</div><div class="pick"><p class="hint">தேடியது: ${esc(q)}</p></div></div>`; return; }
+    if(rows.length===1) return showRow(rows[0]);
+    $("#result").innerHTML = `<div class="result"><div class="banner warn">இந்த நம்பரில் ${rows.length} பதிவுகள் – ஒருவரை தேர்வு செய்யவும்</div><div class="pick">${
+      rows.map(r=>`<button class="btn btn-line" type="button" data-pick="${esc(r.reg_no)}">${esc(r.bib_no)} • ${esc(r.name)}</button>`).join("")}</div></div>`;
+  }catch(e){ $("#scanErr").textContent = e.message; }
+}
+$("#result").addEventListener("click", async e=>{
+  const p = e.target.closest("[data-pick]"); if(p) return lookup(p.dataset.pick);
+  const a = e.target.closest("[data-act]"); if(!a) return;
+  a.disabled = true;
+  try{
+    const j = await api({action:a.dataset.act, reg_no:a.dataset.reg});
+    upsert(j.row);
+    showRow(j.row, j.already ? {kind:"warn", text:`ஏற்கனவே ${a.dataset.act==="checkin"?"செக்-இன்":"டீசர்ட் வழங்கல்"} ஆனது • ${t(j.already)}`}
+                             : {kind:"ok", text: a.dataset.act==="checkin" ? "✓ செக்-இன் ஆனது" : "✓ டீசர்ட் வழங்கப்பட்டது"});
+    buzz(j.already ? [80,60,80] : 60);
+  }catch(err){ $("#scanErr").textContent = err.message; a.disabled=false; }
+});
+function upsert(row){ const i = ROWS.findIndex(r=>r.reg_no===row.reg_no); if(i>=0) ROWS[i]=row; else ROWS.push(row); }
+function showRow(r, note){
+  const c = CATS[r.category]||{};
+  if(!note) note = r.tshirt_given_at ? {kind:"warn", text:`டீசர்ட் ஏற்கனவே வழங்கப்பட்டது • ${t(r.tshirt_given_at)}`}
+            : r.checked_in_at ? {kind:"warn", text:`ஏற்கனவே செக்-இன் • ${t(r.checked_in_at)} – டீசர்ட் மட்டும் கொடுக்கவும்`}
+            : {kind:"ok", text:"✓ சரியான பதிவு – பணம் செலுத்தப்பட்டது"};
+  $("#result").innerHTML = `<div class="result" style="border-top:6px solid ${c.c}">
+    <div class="banner ${note.kind}">${esc(note.text)}</div>
+    <div class="r-body">
+      <div><p class="kicker" style="color:${c.c}">${c.label||""}</p><div class="r-bib tnum">${esc(r.bib_no)}</div></div>
+      <div class="size"><small>டீசர்ட்</small><b>${esc(r.tshirt)}</b></div>
+      <div class="r-name">${esc(r.name)}</div>
+      <div class="r-meta">${esc(r.reg_no)} • ${r.gender==="F"?"பெண்":"ஆண்"} • வயது ${esc(r.age)} • ${esc(r.city||"")} • ${esc(r.phone)}</div>
+      <div class="chips"><span class="chip ${r.checked_in_at?"on":""}">✅ செக்-இன் ${t(r.checked_in_at)}</span><span class="chip ${r.tshirt_given_at?"on":""}">🎽 டீசர்ட் ${t(r.tshirt_given_at)}</span></div>
+    </div>
+    <div class="r-act">
+      <button class="btn ${r.checked_in_at?"btn-line":"btn-ok"}" type="button" data-act="checkin" data-reg="${esc(r.reg_no)}" ${r.checked_in_at?"disabled":""}>✅ செக்-இன்</button>
+      <button class="btn ${r.tshirt_given_at?"btn-line":"btn-go"}" type="button" data-act="tshirt" data-reg="${esc(r.reg_no)}" ${r.tshirt_given_at?"disabled":""}>🎽 டீசர்ட் கொடு</button>
+    </div>
+  </div>`;
+  $("#result").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+$("#manualForm").addEventListener("submit", e=>{ e.preventDefault(); const q=$("#q").value.trim(); if(q) lookup(q); });
+
+/* ---- camera QR ---- */
+let scanner = null, lastCode = "", lastAt = 0;
+$("#camStart").addEventListener("click", async ()=>{
+  if(!window.Html5Qrcode){ $("#scanErr").textContent = "ஸ்கேனர் லோட் ஆகவில்லை. கீழே பதிவு எண்ணை டைப் செய்யவும்."; return; }
+  $("#camIdle").hidden = true;
+  scanner = new Html5Qrcode("reader");
+  try{
+    await scanner.start({facingMode:"environment"}, {fps:10, qrbox:{width:220,height:220}}, code=>{
+      if(code===lastCode && Date.now()-lastAt<4000) return;
+      lastCode=code; lastAt=Date.now(); buzz(40); lookup(code);
+    });
+  }catch(e){
+    $("#camIdle").hidden = false; scanner = null;
+    $("#scanErr").textContent = "கேமரா திறக்க முடியவில்லை. அனுமதி கொடுத்து மீண்டும் முயற்சிக்கவும், அல்லது பதிவு எண்ணை டைப் செய்யவும்.";
+  }
+});
+async function stopCam(){ if(scanner){ try{ await scanner.stop(); scanner.clear(); }catch(_){} scanner=null; $("#camIdle").hidden=false; } }
+
+/* auto-login if PIN in session */
+if(PIN) api({action:"login"}).then(enter).catch(()=>logout());
+</script>
+
+</html>
