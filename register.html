@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Registration – Natura's Trust</title>
+<style>
+:root{--g:#0e7a3d;--gd:#0a4f2a;--b:#0b5ea8;--o:#f59e0b;--bg:#f3faf5;--t:#12281c}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Segoe UI','Noto Sans Tamil',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:17px;line-height:1.5}
+header{background:var(--gd);color:#fff;padding:14px 16px;font-weight:700;text-align:center}
+main{max-width:560px;margin:auto;padding:20px 16px 60px}
+h1{font-size:1.5rem;color:var(--gd);text-align:center;margin:6px 0 4px}
+.s{text-align:center;color:#35523f;margin-bottom:18px}
+.card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 6px 20px #0e7a3d1c;margin-bottom:16px}
+label{display:block;font-weight:600;margin-top:14px}
+label small{font-weight:500;color:#557}
+input,select,textarea{width:100%;font:inherit;padding:13px;border:2px solid #cfe0d5;border-radius:12px;margin-top:6px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:3px solid #f59e0b88;border-color:var(--g)}
+.two{display:grid;gap:0 12px}
+@media(min-width:520px){.two{grid-template-columns:1fr 1fr}}
+.info{background:#eef7f1;border-left:6px solid var(--g);border-radius:12px;padding:12px 14px;margin-top:14px;font-weight:600}
+.err{background:#fdecec;border-left:6px solid #d33;color:#8a1c1c}
+.hide{display:none}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:600}
+.chk input{width:26px;height:26px;margin:2px 0 0;flex:none}
+.btn{display:block;width:100%;text-align:center;padding:17px;border:0;border-radius:14px;font:700 1.05rem inherit;font-family:inherit;cursor:pointer;text-decoration:none;background:var(--o);color:#3a2500;margin-top:18px}
+.btn:disabled{opacity:.6}
+.ok{text-align:center}
+.no{font-size:1.8rem;font-weight:800;color:var(--b);margin:8px 0;word-break:break-all}
+.wa{background:#25d366;color:#053b1a}
+</style>
+</head>
+<body>
+<header>🌿 Natura's Trust</header>
+<main>
+<div id="formView">
+<h1>Online Registration <br>ஆன்லைன் பதிவு</h1>
+<p class="s">25 October 2026 • Mukkudal, Tirunelveli</p>
+<form id="f" novalidate>
+<div class="card">
+  <label>Programme / நிகழ்ச்சி
+    <select name="category" id="category" required>
+      <option value="">— Select / தேர்ந்தெடுங்கள் —</option>
+      <option value="7km">7 KM Marathon (Age 16+) – ₹200</option>
+      <option value="5km">5 KM Marathon (Age 7–15) – ₹200</option>
+      <option value="kids_indoor">Kids Indoor Marathon (Age 3–6) – ₹200</option>
+      <option value="bodybuilding">Bodybuilding (Age 10–18) – ₹300</option>
+    </select>
+  </label>
+  <div class="two">
+    <label>Full name / பெயர்<input name="name" required maxlength="80" autocomplete="name"></label>
+    <label>Gender / பாலினம்
+      <select name="gender" required><option value="">—</option><option value="male">Male / ஆண்</option><option value="female">Female / பெண்</option></select>
+    </label>
+  </div>
+  <div class="two">
+    <label>Date of birth / பிறந்த தேதி<input type="date" name="date_of_birth" id="dob" required max="2026-10-25"></label>
+    <label>Mobile / மொபைல் எண்<input type="tel" name="mobile_number" required inputmode="numeric" maxlength="10" placeholder="10 digits" autocomplete="tel"></label>
+  </div>
+  <div class="info" id="ageInfo">Age on 25 Oct 2026: —</div>
+  <div class="info err hide" id="elig"></div>
+  <label>Address / முகவரி<textarea name="address" rows="2" required maxlength="250"></textarea></label>
+  <div class="two">
+    <label>Taluk / வட்டம்<input name="taluk" required maxlength="60"></label>
+    <label>District / மாவட்டம்<input name="district" required maxlength="60"></label>
+  </div>
+  <div class="two">
+    <label>Emergency contact / அவசரத் தொடர்பு எண்<input type="tel" name="emergency_contact" required inputmode="numeric" maxlength="10"></label>
+    <label>Relation / உறவு<input name="emergency_relation" required maxlength="40" placeholder="Father, Mother…"></label>
+  </div>
+</div>
+
+<div class="card hide" id="guardian">
+  <b>Parent / Guardian (under 18) • பெற்றோர் / பாதுகாவலர்</b>
+  <div class="two">
+    <label>Name / பெயர்<input name="parent_guardian_name" maxlength="80"></label>
+    <label>Mobile / மொபைல்<input type="tel" name="parent_guardian_mobile" inputmode="numeric" maxlength="10"></label>
+  </div>
+  <label class="chk"><input type="checkbox" name="guardian_consent" id="consent"><span>I am the parent/guardian and I give my consent for this participant. / இந்த பங்கேற்பாளருக்கு நான் பெற்றோர்/பாதுகாவலராக ஒப்புதல் அளிக்கிறேன்.</span></label>
+</div>
+
+<div class="info" id="feeInfo">Registration fee / பதிவு கட்டணம்: —</div>
+<div class="info err hide" id="msg"></div>
+<button class="btn" id="pay" type="submit">PAY &amp; REGISTER / பணம் செலுத்தி பதிவு செய்</button>
+</form>
+</div>
+
+<div id="doneView" class="card ok hide">
+  <h1>✅ Registration Successful<br>பதிவு வெற்றி</h1>
+  <p>Your registration number / உங்கள் பதிவு எண்:</p>
+  <div class="no" id="regNo"></div>
+  <p>Please save a screenshot of this page. / இந்தப் பக்கத்தின் ஸ்கிரீன்ஷாட்டைச் சேமித்துக் கொள்ளுங்கள்.</p>
+  <a class="btn wa" href="https://chat.whatsapp.com/BLizhCOK5KiBVf1GQwIWob" target="_blank" rel="noopener">💬 JOIN WHATSAPP COMMUNITY</a>
+</div>
+</main>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var KEY='rzp_test_Tl2PgieprUXJUb';
+var FEE={'7km':200,'5km':200,'kids_indoor':200,'bodybuilding':300};
+var AGE={'7km':[16,120],'5km':[7,15],'kids_indoor':[3,6],'bodybuilding':[10,18]};
+var LABEL={'7km':'7 KM Marathon','5km':'5 KM Marathon','kids_indoor':'Kids Indoor Marathon','bodybuilding':'Bodybuilding'};
+var $=function(i){return document.getElementById(i)},f=$('f'),ageNow=null;
+function calcAge(d){if(!d)return null;var b=new Date(d),e=new Date('2026-10-25'),a=e.getFullYear()-b.getFullYear(),m=e.getMonth()-b.getMonth();if(m<0||(m==0&&e.getDate()<b.getDate()))a--;return a}
+function show(id,on){$(id).classList.toggle('hide',!on)}
+function refresh(){
+  var c=$('category').value;ageNow=calcAge($('dob').value);
+  $('ageInfo').textContent='Age on 25 Oct 2026 / வயது: '+(ageNow===null?'—':ageNow);
+  $('feeInfo').textContent='Registration fee / பதிவு கட்டணம்: '+(c?'₹'+FEE[c]:'—');
+  var bad=c&&ageNow!==null&&(ageNow<AGE[c][0]||ageNow>AGE[c][1]);
+  show('elig',!!bad);
+  if(bad)$('elig').textContent=LABEL[c]+' is for age '+AGE[c][0]+(AGE[c][1]>100?'+':'–'+AGE[c][1])+'. Please choose the correct programme. / வயதுக்கு ஏற்ற நிகழ்ச்சியைத் தேர்ந்தெடுங்கள்.';
+  show('guardian',ageNow!==null&&ageNow<18);
+  return !bad;
+}
+['category','dob'].forEach(function(i){$(i).addEventListener('change',refresh)});
+function err(t){$('msg').textContent=t;show('msg',!!t);if(t)$('msg').scrollIntoView({behavior:'smooth',block:'center'})}
+f.addEventListener('submit',function(ev){
+  ev.preventDefault();err('');
+  var d={};new FormData(f).forEach(function(v,k){d[k]=String(v).trim()});
+  d.guardian_consent=$('consent').checked;
+  var need=['category','name','gender','date_of_birth','mobile_number','address','taluk','district','emergency_contact','emergency_relation'];
+  for(var i=0;i<need.length;i++)if(!d[need[i]])return err('Please fill all fields. / அனைத்து விவரங்களையும் நிரப்புங்கள்.');
+  if(!refresh())return err('Age does not match the programme. / வயது நிகழ்ச்சிக்குப் பொருந்தவில்லை.');
+  var ph=/^[6-9]\d{9}$/;
+  if(!ph.test(d.mobile_number)||!ph.test(d.emergency_contact))return err('Enter valid 10-digit mobile numbers. / சரியான 10 இலக்க எண்ணை உள்ளிடுங்கள்.');
+  if(ageNow<18){
+    if(!d.parent_guardian_name||!ph.test(d.parent_guardian_mobile))return err('Parent/guardian name and valid mobile are required. / பெற்றோர் பெயர் மற்றும் சரியான எண் தேவை.');
+    if(!d.guardian_consent)return err('Parent/guardian consent is required. / பெற்றோர் ஒப்புதல் அவசியம்.');
+  }
+  d.age=ageNow;
+  var btn=$('pay');btn.disabled=true;btn.textContent='Please wait… / காத்திருக்கவும்…';
+  function reset(){btn.disabled=false;btn.innerHTML='PAY &amp; REGISTER / பணம் செலுத்தி பதிவு செய்'}
+  fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Server error');return j})})
+  .then(function(o){
+    var rz=new Razorpay({key:KEY,amount:o.amount*100,currency:'INR',order_id:o.orderId,name:"Natura's Trust",description:LABEL[d.category]+' registration',prefill:{name:d.name,contact:d.mobile_number},theme:{color:'#0e7a3d'},
+      modal:{ondismiss:reset},
+      handler:function(p){
+        btn.textContent='Confirming payment… / உறுதி செய்கிறோம்…';
+        fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})
+        .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Verification failed');return j})})
+        .then(function(v){$('regNo').textContent=v.registrationNumber;show('formView',false);show('doneView',true);window.scrollTo(0,0)})
+        .catch(function(e){reset();err('Payment received but confirmation failed: '+e.message+'. Do NOT pay again. WhatsApp +91 99526 64497 with your payment ID '+p.razorpay_payment_id)});
+      }});
+    rz.on('payment.failed',function(){reset();err('Payment failed. Please try again. / பணம் செலுத்தல் தோல்வி. மீண்டும் முயற்சிக்கவும்.')});
+    rz.open();
+  })
+  .catch(function(e){reset();err('Could not start payment: '+e.message)});
+});
+</script>
+</body>
+</html>
